@@ -8,14 +8,28 @@ function Register() {
     email: '', password: '', first_name: '', last_name: '',
     phone_number: '', national_id: '', birth_date: '', profile_image: null
   });
+  const [errors, setErrors] = useState({}); // استیت جدید برای نگهداری ارورها
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-  const handleFileChange = (e) => setFormData({ ...formData, profile_image: e.target.files[0] });
+  // موقع نوشتن، ارور مربوط به اون فیلد پاک می‌شه
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: null });
+    }
+  };
+
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, profile_image: e.target.files[0] });
+    if (errors.profile_image) {
+      setErrors({ ...errors, profile_image: null });
+    }
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrors({}); // پاک کردن ارورهای قبلی قبل از ارسال مجدد
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     
@@ -41,7 +55,13 @@ function Register() {
       
     } catch (error) {
       console.error("خطای ثبت‌نام:", error.response?.data);
-      alert("خطا در ثبت‌نام! لطفا ورودی‌ها را بررسی کنید (ممکن است ایمیل یا کد ملی تکراری باشد).");
+      // گرفتن ارورها از پاسخ سرور
+      if (error.response && error.response.data) {
+        setErrors(error.response.data);
+        alert("خطا در ثبت‌نام! لطفا اطلاعات وارد شده را بررسی کنید.");
+      } else {
+        alert("خطا در ارتباط با سرور! لطفا بعدا تلاش کنید.");
+      }
     } finally {
       setLoading(false);
     }
@@ -66,7 +86,7 @@ function Register() {
 
       <div style={styles.registerContainer}>
         
-        {/* هدر فرم - دقیقاً مثل لاگین */}
+        {/* هدر فرم */}
         <div style={styles.header}>
           <div style={styles.logoCircle}>⛑️</div>
           <h2 style={styles.clinicName}>کلینیک نوبت‌دهی آنلاین</h2>
@@ -92,6 +112,13 @@ function Register() {
 
           <form onSubmit={handleRegister} style={styles.form}>
             
+            {/* ارورهای کلی در صورت وجود */}
+            {errors.non_field_errors && (
+              <div style={styles.generalError}>
+                {errors.non_field_errors[0]}
+              </div>
+            )}
+
             {/* ردیف نام و نام خانوادگی */}
             <div style={styles.row}>
               <div style={styles.col}>
@@ -100,9 +127,10 @@ function Register() {
                   name="first_name" 
                   onChange={handleChange} 
                   className="glass-input" 
-                  style={styles.inputField} 
+                  style={{...styles.inputField, borderColor: errors.first_name ? '#d32f2f' : '#ddd'}} 
                   required 
                 />
+                {errors.first_name && <span style={styles.errorText}>{errors.first_name[0]}</span>}
               </div>
               <div style={styles.col}>
                 <label style={styles.label}>نام خانوادگی</label>
@@ -110,9 +138,10 @@ function Register() {
                   name="last_name" 
                   onChange={handleChange} 
                   className="glass-input" 
-                  style={styles.inputField} 
+                  style={{...styles.inputField, borderColor: errors.last_name ? '#d32f2f' : '#ddd'}} 
                   required 
                 />
+                {errors.last_name && <span style={styles.errorText}>{errors.last_name[0]}</span>}
               </div>
             </div>
 
@@ -124,10 +153,11 @@ function Register() {
                 name="email" 
                 onChange={handleChange} 
                 className="glass-input" 
-                style={{...styles.inputField, direction: 'ltr', textAlign: 'left'}} 
+                style={{...styles.inputField, direction: 'ltr', textAlign: 'left', borderColor: errors.email ? '#d32f2f' : '#ddd'}} 
                 placeholder="example@gmail.com"
                 required 
               />
+              {errors.email && <span style={styles.errorText}>{errors.email[0]}</span>}
             </div>
 
             {/* موبایل */}
@@ -137,10 +167,11 @@ function Register() {
                 name="phone_number" 
                 onChange={handleChange} 
                 className="glass-input" 
-                style={{...styles.inputField, direction: 'ltr', textAlign: 'left'}} 
+                style={{...styles.inputField, direction: 'ltr', textAlign: 'left', borderColor: errors.phone_number ? '#d32f2f' : '#ddd'}} 
                 placeholder="09123456789"
                 required 
               />
+              {errors.phone_number && <span style={styles.errorText}>{errors.phone_number[0]}</span>}
             </div>
 
             {/* ردیف کد ملی و تاریخ تولد */}
@@ -151,9 +182,10 @@ function Register() {
                   name="national_id" 
                   onChange={handleChange} 
                   className="glass-input" 
-                  style={{...styles.inputField, direction: 'ltr', textAlign: 'left'}} 
+                  style={{...styles.inputField, direction: 'ltr', textAlign: 'left', borderColor: errors.national_id ? '#d32f2f' : '#ddd'}} 
                   required 
                 />
+                {errors.national_id && <span style={styles.errorText}>{errors.national_id[0]}</span>}
               </div>
               <div style={styles.col}>
                 <label style={styles.label}>تاریخ تولد</label>
@@ -162,9 +194,10 @@ function Register() {
                   name="birth_date" 
                   onChange={handleChange} 
                   className="glass-input" 
-                  style={styles.inputField} 
+                  style={{...styles.inputField, borderColor: errors.birth_date ? '#d32f2f' : '#ddd'}} 
                   required 
                 />
+                {errors.birth_date && <span style={styles.errorText}>{errors.birth_date[0]}</span>}
               </div>
             </div>
 
@@ -176,22 +209,24 @@ function Register() {
                 name="password" 
                 onChange={handleChange} 
                 className="glass-input" 
-                style={{...styles.inputField, direction: 'ltr', textAlign: 'left'}} 
+                style={{...styles.inputField, direction: 'ltr', textAlign: 'left', borderColor: errors.password ? '#d32f2f' : '#ddd'}} 
                 placeholder="••••••••"
                 required 
               />
+              {errors.password && <span style={styles.errorText}>{errors.password[0]}</span>}
             </div>
 
             {/* عکس پروفایل */}
             <div style={styles.inputGroup}>
               <label style={styles.label}>عکس پروفایل</label>
-              <div style={styles.fileUploadBox}>
+              <div style={{...styles.fileUploadBox, borderColor: errors.profile_image ? '#d32f2f' : '#00acc1'}}>
                 <input 
                   type="file" 
                   onChange={handleFileChange} 
                   style={{ fontSize: '13px', width: '100%' }} 
                 />
               </div>
+              {errors.profile_image && <span style={styles.errorText}>{errors.profile_image[0]}</span>}
             </div>
 
             <button type="submit" style={styles.registerBtn} disabled={loading}>
@@ -334,7 +369,8 @@ const styles = {
     borderRadius: '12px',
     backgroundColor: 'rgba(255,255,255,0.5)',
     border: '1.5px dashed #00acc1',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    transition: '0.3s'
   },
 
   registerBtn: {
@@ -350,6 +386,26 @@ const styles = {
     boxShadow: '0 10px 20px rgba(0,172,193,0.2)',
     marginTop: '10px',
     transition: '0.3s'
+  },
+
+  errorText: {
+    color: '#d32f2f',
+    fontSize: '12px',
+    marginTop: '5px',
+    marginRight: '5px',
+    display: 'block',
+    fontWeight: '500'
+  },
+
+  generalError: {
+    backgroundColor: '#ffebee',
+    color: '#c62828',
+    padding: '10px',
+    borderRadius: '8px',
+    marginBottom: '15px',
+    fontSize: '14px',
+    textAlign: 'center',
+    border: '1px solid #ffcdd2'
   }
 };
 

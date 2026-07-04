@@ -1,13 +1,20 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from django.core.validators import RegexValidator
+
+national_code_validator = RegexValidator(
+    regex=r'^\d{10}$',
+    message='کد ملی باید دقیقاً ۱۰ رقم باشد.'
+)
+
 
 class PatientProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=11, unique=True, null=True, blank=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    national_id = models.CharField(max_length=10, unique=True)
+    national_id = models.CharField(max_length=10,validators=[national_code_validator], unique=True)
     birth_date = models.DateField()
     profile_image = models.ImageField(upload_to="patients/", null=True, blank=True)
 

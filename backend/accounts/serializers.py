@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import PatientProfile
 from django.db import transaction
+import re
 
 class RegisterSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(write_only=True)
@@ -33,8 +34,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def validate_national_id(self, value):
+        # ۱. چک کردن تکراری نبودن (که قبلاً داشتی)
         if PatientProfile.objects.filter(national_id=value).exists():
             raise serializers.ValidationError("این کد ملی قبلاً ثبت شده است.")
+        
+        # ۲. چک کردن دقیقاً ۱۰ رقم بودن (این همون چیزیه که کمه!)
+        if not re.match(r'^\d{10}$', value):
+            raise serializers.ValidationError("کد ملی باید دقیقاً ۱۰ رقم عددی باشد.")
+            
         return value
 
     def create(self, validated_data):
