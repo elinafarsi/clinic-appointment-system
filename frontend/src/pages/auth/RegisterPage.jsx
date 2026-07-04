@@ -7,7 +7,7 @@ function Register() {
   const [formData, setFormData] = useState({
     email: '', 
     password: '', 
-    password2: '', // اضافه شد
+    password2: '', 
     first_name: '', 
     last_name: '',
     phone_number: '', 
@@ -37,8 +37,6 @@ function Register() {
     setErrors({});
     
     try {
-      // چون عکس رو حذف کردیم، دیگه نیازی به FormData پیچیده و Headers نیست، 
-      // ولی برای هماهنگی با کدهای قبلی همون ساختار رو نگه می‌داریم:
       const data = new FormData();
       Object.keys(formData).forEach(key => { 
         data.append(key, formData[key]); 
@@ -144,9 +142,7 @@ function Register() {
   );
 }
 
-// استایل‌ها رو دقیقاً مثل قبل نگه داشتم (تغییری نکردن)
 const styles = {
-    // ... همون استایل‌هایی که خودت داشتی رو اینجا بذار ...
     pageBackground: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at top right, #f0f9ff, #cbebff, #e0f2f1)', direction: 'rtl', fontFamily: 'Tahoma, Arial, sans-serif', padding: '40px 20px' },
     registerContainer: { width: '100%', maxWidth: '480px' },
     header: { textAlign: 'center', marginBottom: '25px' },

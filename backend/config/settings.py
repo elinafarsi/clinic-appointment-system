@@ -151,3 +151,11 @@ import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+
+# Password hashing algorithms
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher', # قوی‌ترین الگوریتم فعلی
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher', # جایگزین عالی بعدی
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+]
