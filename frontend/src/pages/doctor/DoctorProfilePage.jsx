@@ -19,10 +19,11 @@ function DoctorProfile() {
   const [message, setMessage] = useState({ type: '', text: '' });
 
   const handleLogout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     navigate("/");
   };
+  
 
   useEffect(() => {
     api.get('accounts/doctor/me/')

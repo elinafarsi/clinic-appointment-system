@@ -10,10 +10,11 @@ function DoctorsList() {
   const [search, setSearch] = useState("");
 
   const handleLogout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     navigate("/");
   };
+  
 
   // هربار که مقدار search تغییر می‌کنه، با یک تاخیر ۵۰۰ میلی‌ثانیه‌ای (Debounce) سرچ بک‌اند صدا زده می‌شه
   useEffect(() => {

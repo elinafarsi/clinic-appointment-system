@@ -31,10 +31,11 @@ function DoctorAppointments() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     navigate("/");
   };
+  
 
   useEffect(() => {
     fetchAppointments();

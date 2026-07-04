@@ -9,12 +9,19 @@ function PatientDashboard() {
   const [patient, setPatient] = useState(null);
 
   const handleLogout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     navigate("/");
   };
+  
 
   useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+  
     const fetchDoctors = async () => {
       try {
         const response = await api.get('accounts/doctors/');
@@ -25,19 +32,26 @@ function PatientDashboard() {
         setLoading(false);
       }
     };
-
+  
     const fetchPatient = async () => {
       try {
         const res = await api.get('accounts/me/');
         setPatient(res.data);
       } catch (error) {
         console.error("خطا در دریافت پروفایل:", error);
+  
+        if (error.response?.status === 401) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          navigate('/login');
+        }
       }
     };
-
+  
     fetchDoctors();
     fetchPatient();
-  }, []);
+  }, [navigate]);
+  
 
   return (
     <div style={styles.pageBackground}>

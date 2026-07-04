@@ -11,23 +11,36 @@ function DoctorDashboard() {
   const [loadingAppointments, setLoadingAppointments] = useState(true);
 
   const handleLogout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     navigate("/");
   };
+  
 
   useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+  
     const fetchDoctorProfile = async () => {
       try {
         const res = await api.get('accounts/doctor/me/');
         setDoctor(res.data);
       } catch (error) {
         console.error("خطا در دریافت پروفایل دکتر:", error);
+  
+        if (error.response?.status === 401) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          navigate('/login');
+        }
       } finally {
         setLoadingProfile(false);
       }
     };
-
+  
     const fetchAppointments = async () => {
       try {
         const res = await api.get('appointments/appointments/');
@@ -35,14 +48,21 @@ function DoctorDashboard() {
         setAppointments(data);
       } catch (error) {
         console.error("خطا در دریافت نوبت‌ها:", error);
+  
+        if (error.response?.status === 401) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          navigate('/login');
+        }
       } finally {
         setLoadingAppointments(false);
       }
     };
-
+  
     fetchDoctorProfile();
     fetchAppointments();
-  }, []);
+  }, [navigate]);
+  
 
   const today = new Date().toISOString().split('T')[0];
 

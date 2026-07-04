@@ -19,10 +19,11 @@ function PatientProfile() {
   const [profileImage, setProfileImage] = useState(null);
 
   const handleLogout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     navigate("/");
   };
+  
 
   useEffect(() => {
     api.get("accounts/me/")

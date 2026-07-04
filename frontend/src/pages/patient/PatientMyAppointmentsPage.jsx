@@ -59,9 +59,11 @@ function PatientMyAppointments() {
 
   // تابع خروج از حساب کاربری
   const handleLogout = () => {
-    localStorage.clear(); 
-    navigate("/"); 
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/");
   };
+  
 
   return (
     <div style={styles.pageBackground}>
