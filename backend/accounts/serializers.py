@@ -5,7 +5,7 @@ from django.db import transaction
 import re
 
 class RegisterSerializer(serializers.ModelSerializer):
-    phone_number = serializers.CharField(write_only=True)
+    phone_number = serializers.CharField(write_only=True, required=True, allow_blank=False)
     first_name = serializers.CharField(write_only=True)
     last_name = serializers.CharField(write_only=True)
     national_id = serializers.CharField(write_only=True)
@@ -29,8 +29,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         }
 
     def validate_phone_number(self, value):
+        # ۱. چک کردن تکراری نبودن
         if PatientProfile.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("این شماره موبایل قبلاً ثبت شده است.")
+        
+        # ۲. چک کردن فرمت ۱۱ رقم و شروع با ۰۹
+        if not re.match(r'^09\d{9}$', value):
+            raise serializers.ValidationError("شماره موبایل معتبر نیست. باید ۱۱ رقم باشد و با ۰۹ شروع شود.")
+            
         return value
 
     def validate_national_id(self, value):

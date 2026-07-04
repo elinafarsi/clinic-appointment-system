@@ -8,10 +8,15 @@ national_code_validator = RegexValidator(
     message='کد ملی باید دقیقاً ۱۰ رقم باشد.'
 )
 
+phone_validator = RegexValidator(
+    regex=r'^09\d{9}$',
+    message='شماره موبایل باید ۱۱ رقم باشد و با ۰۹ شروع شود.'
+)
+
 
 class PatientProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=11, unique=True, null=True, blank=True)
+    phone_number = models.CharField(max_length=11, unique=True, validators=[phone_validator])
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     national_id = models.CharField(max_length=10,validators=[national_code_validator], unique=True)
@@ -24,7 +29,7 @@ class PatientProfile(models.Model):
 
 class DoctorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=11, unique=True, null=True, blank=True)
+    phone_number = models.CharField(max_length=11, unique=True,validators=[phone_validator])
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     medical_license_number = models.CharField(max_length=20, unique=True)
