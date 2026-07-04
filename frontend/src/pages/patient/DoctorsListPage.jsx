@@ -15,14 +15,24 @@ function DoctorsList() {
     navigate("/");
   };
 
+  // هربار که مقدار search تغییر می‌کنه، با یک تاخیر ۵۰۰ میلی‌ثانیه‌ای (Debounce) سرچ بک‌اند صدا زده می‌شه
   useEffect(() => {
-    fetchDoctors();
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      fetchDoctors(search);
+    }, 500); // ۵۰۰ میلی‌ثانیه صبر می‌کنه تا کاربر تایپش تموم بشه
 
-  const fetchDoctors = async () => {
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
+
+  // تابع دریافت پزشکان از بک‌اند با فیلتر سرچ
+  const fetchDoctors = async (searchQuery = "") => {
+    setLoading(true);
     try {
-      const response = await api.get("/accounts/doctors/");
-      console.log("Doctors API:", response.data);
+      // ارسال مقدار جستجو به بک‌اند
+      const response = await api.get(`/accounts/doctors/`, {
+        params: { search: searchQuery }
+      });
+      console.log("Doctors API (Filtered):", response.data);
 
       setDoctors(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
@@ -32,12 +42,6 @@ function DoctorsList() {
       setLoading(false);
     }
   };
-
-  const filteredDoctors = doctors.filter((doctor) =>
-    `${doctor.first_name || ""} ${doctor.last_name || ""}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
 
   return (
     <div style={styles.pageBackground}>
@@ -77,7 +81,7 @@ function DoctorsList() {
 
         <div style={styles.searchWrapper}>
           <input
-            placeholder="جستجوی نام پزشک..."
+            placeholder="جستجوی نام، فامیل یا تخصص پزشک..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={styles.searchInput}
@@ -88,11 +92,11 @@ function DoctorsList() {
           <p style={{ textAlign: "center", color: "#007080" }}>
             در حال بارگذاری پزشکان...
           </p>
-        ) : filteredDoctors.length === 0 ? (
+        ) : doctors.length === 0 ? (
           <p style={{ textAlign: "center" }}>پزشکی یافت نشد</p>
         ) : (
           <div style={styles.grid3}>
-            {filteredDoctors.map((doctor) => (
+            {doctors.map((doctor) => (
               <div key={doctor.id} style={styles.doctorCard}>
                 <div style={styles.avatarWrapper}>
                   {doctor.profile_image ? (
@@ -130,7 +134,6 @@ function DoctorsList() {
 }
 
 const styles = {
-
   pageBackground: {
     background: "radial-gradient(circle at top right, #f0f9ff, #cbebff, #f0faff)",
     minHeight: "100vh",

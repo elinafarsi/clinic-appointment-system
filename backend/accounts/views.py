@@ -25,12 +25,16 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 from .models import DoctorProfile
 from appointments.serializers import *
+from rest_framework import filters
 
 class DoctorListView(generics.ListAPIView):
     queryset = DoctorProfile.objects.select_related('user').all()
     serializer_class = DoctorProfileSerializer
     permission_classes = [AllowAny]
     authentication_classes = []
+
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['first_name', 'last_name', 'specialty']
 
 from .models import PatientProfile
 
