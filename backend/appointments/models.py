@@ -20,3 +20,11 @@ class Appointment(models.Model):
     appointment_time = models.TimeField()
     status = models.CharField(max_length=20, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['doctor', 'appointment_date', 'appointment_time'],
+                name='unique_appointment_per_doctor_slot'
+            )
+        ]

@@ -49,6 +49,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             'doctor'
         ]
 
+from django.db import transaction, IntegrityError
 
 class AppointmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,8 +62,19 @@ class AppointmentCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['status'] = 'confirmed'
+        # اینجا پروفایل بیمار رو از روی ریکوئست برمی‌داریم
         validated_data['patient'] = self.context['request'].user.patientprofile
-        return super().create(validated_data)
+        
+        try:
+            # با این کار، کل فرآیند ذخیره درون یک تراکنش اتمیک انجام میشه
+            with transaction.atomic():
+                return super().create(validated_data)
+        except IntegrityError:
+            # اگه قیدِ UniqueConstraint که توی مدل گذاشتیم نقض بشه،
+            # دیتابیس این خطا رو میده و ما اینجا به صورت ولیدیشن ارور خوشگل به کاربر نشونش میدیم:
+            raise serializers.ValidationError({
+                "detail": "این نوبت قبلاً توسط شخص دیگری رزرو شده است."
+            })
 
     def validate(self, data):
         existing = Appointment.objects.filter(
