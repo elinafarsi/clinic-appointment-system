@@ -45,6 +45,21 @@ class AppointmentTests(APITestCase):
         self.today = date.today()
 
     def test_patient_can_create_appointment(self):
+        """
+        Test Case: Patient creates an appointment successfully
+
+        Preconditions:
+            - Patient user is authenticated.
+            - Doctor exists.
+
+        Steps:
+            1. Send appointment creation request with valid data.
+
+        Expected Result:
+            - Response status is 201.
+            - Appointment is created successfully.
+            - Appointment status is confirmed.
+        """
         self.client.force_authenticate(user=self.patient_user)
 
         payload = {
@@ -62,6 +77,18 @@ class AppointmentTests(APITestCase):
         self.assertEqual(appointment.patient, self.patient_profile, "wrong patient")
 
     def test_doctor_cannot_create_appointment(self):
+        """
+        Test Case: Doctor cannot create an appointment
+
+        Preconditions:
+            - Doctor user is authenticated.
+
+        Steps:
+            1. Send appointment creation request as doctor.
+
+        Expected Result:
+            - Response status is 403.
+        """
         self.client.force_authenticate(user=self.doctor_user)
 
         payload = {
@@ -74,6 +101,20 @@ class AppointmentTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, "doctor booked appointment")
 
     def test_prevent_double_booking(self):
+        """
+        Test Case: Prevent double booking for the same slot
+
+        Preconditions:
+            - One appointment already exists for the selected doctor, date, and time.
+
+        Steps:
+            1. Create an appointment for a slot.
+            2. Try to create another appointment for the same slot.
+
+        Expected Result:
+            - Response status is 400.
+            - Second booking is rejected.
+        """
         Appointment.objects.create(
             patient=self.patient_profile,
             doctor=self.doctor_profile,
@@ -107,6 +148,20 @@ class AppointmentTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, "double booking allowed")
 
     def test_patient_can_cancel_own_appointment(self):
+        """
+        Test Case: Patient cancels own appointment
+
+        Preconditions:
+            - Patient user is authenticated.
+            - Appointment exists for the patient.
+
+        Steps:
+            1. Send cancel request for the appointment.
+
+        Expected Result:
+            - Response status is 200.
+            - Appointment status changes to cancelled.
+        """
         self.client.force_authenticate(user=self.patient_user)
 
         appointment = Appointment.objects.create(
@@ -125,6 +180,19 @@ class AppointmentTests(APITestCase):
         self.assertEqual(appointment.status, "cancelled", "status not cancelled")
 
     def test_cannot_cancel_twice(self):
+        """
+        Test Case: Prevent cancelling an appointment twice
+
+        Preconditions:
+            - Patient user is authenticated.
+            - Appointment is already cancelled.
+
+        Steps:
+            1. Send cancel request for an already cancelled appointment.
+
+        Expected Result:
+            - Response status is 400.
+        """
         self.client.force_authenticate(user=self.patient_user)
 
         appointment = Appointment.objects.create(
@@ -141,6 +209,20 @@ class AppointmentTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, "double cancel allowed")
 
     def test_doctor_can_cancel_appointment(self):
+        """
+        Test Case: Doctor cancels an appointment
+
+        Preconditions:
+            - Doctor user is authenticated.
+            - Appointment exists.
+
+        Steps:
+            1. Send doctor cancel request for the appointment.
+
+        Expected Result:
+            - Response status is 200.
+            - Appointment status changes to cancelled.
+        """
         appointment = Appointment.objects.create(
             patient=self.patient_profile,
             doctor=self.doctor_profile,
@@ -158,6 +240,24 @@ class AppointmentTests(APITestCase):
         self.assertEqual(appointment.status, "cancelled", "doctor cancel not saved")
 
     def test_available_slots_returns_free_times(self):
+        """
+        Test Case: Get available appointment slots
+
+        Preconditions:
+            - Patient user is authenticated.
+            - Doctor availability exists.
+            - One slot is already booked.
+
+        Steps:
+            1. Create doctor availability for a day.
+            2. Create one booked appointment in that range.
+            3. Request available slots.
+
+        Expected Result:
+            - Response status is 200.
+            - Free slot is included in response.
+            - Booked slot is not included in response.
+        """
         self.client.force_authenticate(user=self.patient_user)
 
         target_date = date.today()
@@ -186,6 +286,18 @@ class AppointmentTests(APITestCase):
         self.assertNotIn("09:00", response.data["available_slots"], "booked slot shown")
 
     def test_available_slots_requires_doctor_and_date(self):
+        """
+        Test Case: Available slots request requires doctor and date
+
+        Preconditions:
+            - Patient user is authenticated.
+
+        Steps:
+            1. Send available slots request without required query params.
+
+        Expected Result:
+            - Response status is 400.
+        """
         self.client.force_authenticate(user=self.patient_user)
         response = self.client.get("/api/appointments/appointments/available_slots/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, "missing params allowed")
@@ -225,6 +337,19 @@ class DoctorAvailabilityTests(APITestCase):
         self.url = "/api/appointments/availability/"
 
     def test_doctor_can_create_availability(self):
+        """
+        Test Case: Doctor creates availability successfully
+
+        Preconditions:
+            - Doctor user is authenticated.
+
+        Steps:
+            1. Send availability creation request with valid data.
+
+        Expected Result:
+            - Response status is 201.
+            - Availability is saved successfully.
+        """
         self.client.force_authenticate(user=self.doctor_user)
         payload = {
             "day_of_week": 0,
@@ -237,6 +362,18 @@ class DoctorAvailabilityTests(APITestCase):
         self.assertEqual(DoctorAvailability.objects.count(), 1, "availability not saved")
 
     def test_patient_cannot_create_availability(self):
+        """
+        Test Case: Patient cannot create doctor availability
+
+        Preconditions:
+            - Patient user is authenticated.
+
+        Steps:
+            1. Send availability creation request as patient.
+
+        Expected Result:
+            - Response status is 403.
+        """
         self.client.force_authenticate(user=self.patient_user)
         payload = {
             "day_of_week": 0,
@@ -318,6 +455,21 @@ class ConcurrentBookingTests(TransactionTestCase):
         self.results.append(res.status_code)
 
     def test_concurrent_booking_same_slot(self):
+        """
+        Test Case: Prevent concurrent booking of the same slot
+
+        Preconditions:
+            - Two patient users exist.
+            - Both try to book the same doctor, date, and time.
+
+        Steps:
+            1. Start two booking requests at the same time.
+            2. Wait for both requests to finish.
+
+        Expected Result:
+            - At most one booking succeeds.
+            - Race condition does not create duplicate appointments.
+        """
         t1 = threading.Thread(target=self.book_slot, args=("p1@test.com", "StrongPass123"))
         t2 = threading.Thread(target=self.book_slot, args=("p2@test.com", "StrongPass123"))
 
