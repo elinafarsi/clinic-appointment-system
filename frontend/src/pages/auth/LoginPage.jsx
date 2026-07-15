@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 
@@ -6,7 +6,17 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 480); // تشخیص موبایل
   const navigate = useNavigate();
+
+  // مدیریت تغییر سایز صفحه برای ریسپانسیو لحظه‌ای
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 480);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -36,14 +46,27 @@ function Login() {
 
   return (
     <div style={styles.pageBackground}>
-      
-      <div style={styles.loginContainer}>
+      <div style={{
+        ...styles.loginContainer,
+        maxWidth: isMobile ? '100%' : '450px' // در موبایل عرض کامل بگیرد
+      }}>
         
         {/* هدر فرم */}
         <div style={styles.header}>
-          <div style={styles.logoCircle}>⛑️</div>
-          <h2 style={styles.clinicName}>کلینیک نوبت‌دهی آنلاین</h2>
-          <p style={styles.subtitle}>خوش آمدید، لطفا وارد حساب خود شوید</p>
+          <div style={{
+            ...styles.logoCircle,
+            width: isMobile ? '60px' : '80px', // لوگو در موبایل کوچک‌تر
+            height: isMobile ? '60px' : '80px',
+            fontSize: isMobile ? '35px' : '45px'
+          }}>⛑️</div>
+          <h2 style={{
+            ...styles.clinicName,
+            fontSize: isMobile ? '20px' : '26px' // فونت تیتر در موبایل
+          }}>کلینیک نوبت‌دهی آنلاین</h2>
+          <p style={{
+            ...styles.subtitle,
+            fontSize: isMobile ? '13px' : '15px'
+          }}>خوش آمدید، لطفا وارد حساب خود شوید</p>
         </div>
 
         <div style={styles.card}>
@@ -55,14 +78,13 @@ function Login() {
             >
               ثبت‌نام
             </button>
-            <button
-              style={styles.tabBtnActive}
-            >
-              ورود
-            </button>
+            <button style={styles.tabBtnActive}>ورود</button>
           </div>
 
-          <form onSubmit={handleAuth} style={styles.form}>
+          <form onSubmit={handleAuth} style={{
+            ...styles.form,
+            padding: isMobile ? '20px' : '35px' // پدینگ کمتر در موبایل برای فضای بیشتر
+          }}>
             
             <div style={styles.inputGroup}>
               <label style={styles.label}>ایمیل (نام کاربری)</label>
@@ -91,8 +113,6 @@ function Login() {
             <button type="submit" style={styles.loginBtn} disabled={loading}>
               {loading ? 'در حال بررسی...' : 'ورود به حساب'}
             </button>
-            
-            
           </form>
         </div>
       </div>
@@ -109,25 +129,21 @@ const styles = {
     background: 'radial-gradient(circle at top right, #f0f9ff, #cbebff, #e0f2f1)',
     direction: 'rtl',
     fontFamily: 'Tahoma, Arial, sans-serif',
-    padding: '20px'
+    padding: '15px' // پدینگ دور صفحه برای گوشی
   },
 
   loginContainer: {
     width: '100%',
-    maxWidth: '450px',
     animation: 'fadeIn 0.8s ease-in-out'
   },
 
   header: {
     textAlign: 'center',
-    marginBottom: '30px'
+    marginBottom: '20px'
   },
 
   logoCircle: {
-    fontSize: '45px',
     background: '#fff',
-    width: '80px',
-    height: '80px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -139,14 +155,12 @@ const styles = {
   clinicName: {
     margin: '0',
     color: '#007080',
-    fontSize: '26px',
     fontWeight: 'bold'
   },
 
   subtitle: {
     color: '#666',
-    marginTop: '5px',
-    fontSize: '15px'
+    marginTop: '5px'
   },
 
   card: {
@@ -187,11 +201,11 @@ const styles = {
   },
 
   form: {
-    padding: '35px'
+    // پدینگ به صورت داینامیک در بالا تنظیم شده
   },
 
   inputGroup: {
-    marginBottom: '20px'
+    marginBottom: '15px'
   },
 
   label: {
@@ -228,15 +242,6 @@ const styles = {
     boxShadow: '0 10px 20px rgba(0,172,193,0.2)',
     marginTop: '10px',
     transition: '0.3s'
-  },
-
-  forgotPass: {
-    textAlign: 'center',
-    marginTop: '20px',
-    color: '#00897b',
-    fontSize: '13px',
-    cursor: 'pointer',
-    fontWeight: '500'
   }
 };
 
