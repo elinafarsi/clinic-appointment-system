@@ -6,6 +6,11 @@ function FirstPage() {
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // pagination client-side
+  const [currentPage, setCurrentPage] = useState(1);
+  const doctorsPerPage = 3;
+
   const [screenSize, setScreenSize] = useState({
     isMobile: window.innerWidth <= 576,
     isTablet: window.innerWidth > 576 && window.innerWidth <= 992,
@@ -40,6 +45,20 @@ function FirstPage() {
 
   const dynamicStyles = getResponsiveStyles(screenSize);
 
+  // محاسبه دکترهای هر صفحه
+  const indexOfLastDoctor = currentPage * doctorsPerPage;
+  const indexOfFirstDoctor = indexOfLastDoctor - doctorsPerPage;
+  const currentDoctors = doctors.slice(indexOfFirstDoctor, indexOfLastDoctor);
+
+  const totalPages = Math.ceil(doctors.length / doctorsPerPage);
+
+  const goToPage = (pageNumber) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div style={dynamicStyles.pageBackground}>
       <nav style={dynamicStyles.navbar}>
@@ -69,49 +88,84 @@ function FirstPage() {
         {loading ? (
           <div style={dynamicStyles.loader}>در حال بارگذاری پزشکان... ⏳</div>
         ) : (
-          <div style={dynamicStyles.grid}>
-            {doctors.length > 0 ? (
-              doctors.map((doctor) => (
-                <div key={doctor.id} style={dynamicStyles.doctorCard}>
-                  <div style={dynamicStyles.avatarWrapper}>
-                    {doctor.profile_image ? (
-                      <img
-                        src={
-                          doctor.profile_image.startsWith('http')
-                            ? doctor.profile_image
-                            : `http://127.0.0.1:8000${doctor.profile_image}`
-                        }
-                        alt="Doctor"
-                        style={dynamicStyles.avatarImg}
-                      />
-                    ) : (
-                      <div style={dynamicStyles.defaultAvatar}>👤</div>
-                    )}
+          <>
+            <div style={dynamicStyles.grid}>
+              {currentDoctors.length > 0 ? (
+                currentDoctors.map((doctor) => (
+                  <div key={doctor.id} style={dynamicStyles.doctorCard}>
+                    <div style={dynamicStyles.avatarWrapper}>
+                      {doctor.profile_image ? (
+                        <img
+                          src={
+                            doctor.profile_image.startsWith('http')
+                              ? doctor.profile_image
+                              : `http://127.0.0.1:8000${doctor.profile_image}`
+                          }
+                          alt="Doctor"
+                          style={dynamicStyles.avatarImg}
+                        />
+                      ) : (
+                        <div style={dynamicStyles.defaultAvatar}>👤</div>
+                      )}
+                    </div>
+
+                    <h3 style={dynamicStyles.doctorName}>
+                      دکتر {doctor.user?.first_name || doctor.first_name || 'نامشخص'}{' '}
+                      {doctor.user?.last_name || doctor.last_name || ''}
+                    </h3>
+
+                    <p style={dynamicStyles.specialty}>
+                      {doctor.specialty || 'متخصص عمومی'}
+                    </p>
+
+                    <button
+                      style={dynamicStyles.viewBtn}
+                      onClick={() => navigate('/login')}
+                    >
+                      رزرو نوبت و مشاهده پروفایل
+                    </button>
                   </div>
-
-                  <h3 style={dynamicStyles.doctorName}>
-                    دکتر {doctor.user?.first_name || doctor.first_name || 'نامشخص'}{' '}
-                    {doctor.user?.last_name || doctor.last_name || ''}
-                  </h3>
-
-                  <p style={dynamicStyles.specialty}>
-                    {doctor.specialty || 'متخصص عمومی'}
-                  </p>
-
-                  <button
-                    style={dynamicStyles.viewBtn}
-                    onClick={() => navigate('/login')}
-                  >
-                    رزرو نوبت و مشاهده پروفایل
-                  </button>
+                ))
+              ) : (
+                <div style={dynamicStyles.emptyState}>
+                  <p>پزشکی یافت نشد.</p>
                 </div>
-              ))
-            ) : (
-              <div style={dynamicStyles.emptyState}>
-                <p>پزشکی یافت نشد.</p>
+              )}
+            </div>
+
+            {/* Pagination Controls */}
+            {doctors.length > doctorsPerPage && (
+              <div style={dynamicStyles.paginationWrapper}>
+                <button
+                  style={{
+                    ...dynamicStyles.paginationBtn,
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  }}
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  قبلی
+                </button>
+
+                <div style={dynamicStyles.pageInfo}>
+                  صفحه {currentPage} از {totalPages}
+                </div>
+
+                <button
+                  style={{
+                    ...dynamicStyles.paginationBtn,
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  }}
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  بعدی
+                </button>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>
@@ -223,7 +277,7 @@ function getResponsiveStyles({ isMobile, isTablet }) {
         ? '1fr'
         : isTablet
         ? 'repeat(2, 1fr)'
-        : 'repeat(auto-fit, minmax(260px, 1fr))',
+        : 'repeat(3, 1fr)',
       gap: isMobile ? '16px' : '25px',
     },
 
@@ -296,6 +350,30 @@ function getResponsiveStyles({ isMobile, isTablet }) {
       textAlign: 'center',
       padding: isMobile ? '30px' : '60px',
       color: '#607d8b',
+    },
+
+    paginationWrapper: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: isMobile ? '10px' : '16px',
+      marginTop: isMobile ? '24px' : '36px',
+      flexWrap: 'wrap',
+    },
+
+    paginationBtn: {
+      backgroundColor: '#007080',
+      color: '#fff',
+      border: 'none',
+      padding: isMobile ? '10px 16px' : '10px 22px',
+      borderRadius: '12px',
+      fontWeight: 'bold',
+    },
+
+    pageInfo: {
+      color: '#004d40',
+      fontWeight: 'bold',
+      fontSize: isMobile ? '14px' : '16px',
     },
   };
 }

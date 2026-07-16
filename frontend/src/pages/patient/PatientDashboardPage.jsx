@@ -9,6 +9,10 @@ function PatientDashboard() {
   const [patient, setPatient] = useState(null);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
+  // استیت‌های مربوط به صفحه‌بندی
+  const [currentPage, setCurrentPage] = useState(1);
+  const doctorsPerPage = 3;
+
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
@@ -31,7 +35,9 @@ function PatientDashboard() {
     const fetchDoctors = async () => {
       try {
         const response = await api.get('accounts/doctors/');
-        setDoctors(response.data.slice(0, 3));
+        // ریحانه جان، slice(0, 3) رو برداشتم تا کل لیست رو بگیریم و توی فرانت صفحه‌بندی کنیم
+        const data = response.data.results ? response.data.results : response.data;
+        setDoctors(data);
         setLoading(false);
       } catch (error) {
         console.error("خطا در دریافت لیست پزشکان:", error);
@@ -61,6 +67,19 @@ function PatientDashboard() {
   const isMobile = screenWidth <= 768;
   const isSmallMobile = screenWidth <= 480;
 
+  // محاسبه پزشک‌های مربوط به صفحه فعلی
+  const indexOfLastDoctor = currentPage * doctorsPerPage;
+  const indexOfFirstDoctor = indexOfLastDoctor - doctorsPerPage;
+  const currentDoctors = doctors.slice(indexOfFirstDoctor, indexOfLastDoctor);
+
+  const totalPages = Math.ceil(doctors.length / doctorsPerPage);
+
+  const goToPage = (pageNumber) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
   return (
     <div style={styles.pageBackground}>
       <nav
@@ -69,7 +88,7 @@ function PatientDashboard() {
           padding: isSmallMobile ? '8px 10px' : isMobile ? '10px 16px' : '15px 60px'
         }}
       >
-        {/* DESKTOP: یک ردیف (مثل قبل) */}
+        {/* DESKTOP */}
         {!isMobile && (
           <>
             <div style={styles.logo}>
@@ -88,10 +107,9 @@ function PatientDashboard() {
           </>
         )}
 
-        {/* MOBILE/TABLET: دو ردیف فشرده */}
+        {/* MOBILE/TABLET */}
         {isMobile && (
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {/* Row 1: Logo + Logout */}
             <div style={styles.navTopRow}>
               <div
                 style={{
@@ -121,7 +139,6 @@ function PatientDashboard() {
               </button>
             </div>
 
-            {/* Row 2: Links */}
             <div
               style={{
                 ...styles.navLinksRow,
@@ -231,39 +248,89 @@ function PatientDashboard() {
         {loading ? (
           <p style={{ textAlign: 'center', color: '#007080' }}>در حال بارگذاری پزشکان...</p>
         ) : (
-          <div
-            style={{
-              ...styles.grid3,
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))'
-            }}
-          >
-            {doctors.map((doctor) => (
-              <div key={doctor.id} style={styles.doctorCard}>
-                <div style={styles.avatarWrapper}>
-                  {doctor.profile_image ? (
-                    <img src={doctor.profile_image} alt="doctor" style={styles.avatarImg} />
-                  ) : (
-                    <span style={{ fontSize: isMobile ? '32px' : '40px' }}>👤</span>
-                  )}
+          <>
+            <div
+              style={{
+                ...styles.grid3,
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)'
+              }}
+            >
+              {currentDoctors.length > 0 ? (
+                currentDoctors.map((doctor) => (
+                  <div key={doctor.id} style={styles.doctorCard}>
+                    <div style={styles.avatarWrapper}>
+                      {doctor.profile_image ? (
+                        <img 
+                          src={
+                            doctor.profile_image.startsWith('http')
+                              ? doctor.profile_image
+                              : `http://127.0.0.1:8000${doctor.profile_image}`
+                          } 
+                          alt="doctor" 
+                          style={styles.avatarImg} 
+                        />
+                      ) : (
+                        <span style={{ fontSize: isMobile ? '32px' : '40px' }}>👤</span>
+                      )}
+                    </div>
+
+                    <h4 style={styles.doctorName}>
+                      دکتر {doctor.user?.first_name || doctor.first_name || 'نامشخص'}{' '}
+                      {doctor.user?.last_name || doctor.last_name || ''}
+                    </h4>
+
+                    <p style={styles.doctorSpecialty}>
+                      {doctor.specialty || 'متخصص عمومی'}
+                    </p>
+
+                    <button
+                      onClick={() => navigate(`/doctor/${doctor.id}`)}
+                      style={styles.viewProfileBtn}
+                    >
+                      مشاهده پروفایل و رزرو
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#607d8b' }}>
+                  پزشکی یافت نشد.
+                </div>
+              )}
+            </div>
+
+            {/* کنترلرهای صفحه‌بندی */}
+            {doctors.length > doctorsPerPage && (
+              <div style={styles.paginationWrapper}>
+                <button
+                  style={{
+                    ...styles.paginationBtn,
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  }}
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  قبلی
+                </button>
+
+                <div style={styles.pageInfo}>
+                  صفحه {currentPage} از {totalPages}
                 </div>
 
-                <h4 style={styles.doctorName}>
-                  دکتر {doctor.first_name} {doctor.last_name}
-                </h4>
-
-                <p style={styles.doctorSpecialty}>
-                  {doctor.specialty || 'متخصص عمومی'}
-                </p>
-
                 <button
-                  onClick={() => navigate(`/doctor/${doctor.id}`)}
-                  style={styles.viewProfileBtn}
+                  style={{
+                    ...styles.paginationBtn,
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  }}
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
                 >
-                  مشاهده پروفایل و رزرو
+                  بعدی
                 </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -275,7 +342,8 @@ const styles = {
     background: 'radial-gradient(circle at top right, #f0f9ff, #cbebff, #f0faff)',
     minHeight: '100vh',
     direction: 'rtl',
-    fontFamily: 'Tahoma, Arial, sans-serif'
+    fontFamily: 'Tahoma, Arial, sans-serif',
+    paddingBottom: '40px'
   },
 
   navbar: {
@@ -304,7 +372,6 @@ const styles = {
     alignItems: 'center'
   },
 
-  // موبایل: ردیف بالا
   navTopRow: {
     display: 'flex',
     width: '100%',
@@ -313,7 +380,6 @@ const styles = {
     gap: '10px'
   },
 
-  // موبایل: ردیف لینک‌ها
   navLinksRow: {
     display: 'flex',
     width: '100%',
@@ -419,7 +485,6 @@ const styles = {
 
   grid3: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
     gap: '25px'
   },
 
@@ -462,6 +527,31 @@ const styles = {
     cursor: 'pointer',
     fontWeight: 'bold',
     transition: '0.3s'
+  },
+
+  // استایل‌های صفحه‌بندی جدید
+  paginationWrapper: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '16px',
+    marginTop: '36px',
+    flexWrap: 'wrap',
+  },
+
+  paginationBtn: {
+    backgroundColor: '#007080',
+    color: '#fff',
+    border: 'none',
+    padding: '10px 22px',
+    borderRadius: '12px',
+    fontWeight: 'bold',
+  },
+
+  pageInfo: {
+    color: '#004d40',
+    fontWeight: 'bold',
+    fontSize: '16px',
   }
 };
 
