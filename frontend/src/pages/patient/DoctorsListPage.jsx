@@ -8,19 +8,25 @@ function DoctorsList() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     navigate("/");
   };
-  
+
+  useEffect(() => {
+    const handleResize = () => setScreenWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // هربار که مقدار search تغییر می‌کنه، با یک تاخیر ۵۰۰ میلی‌ثانیه‌ای (Debounce) سرچ بک‌اند صدا زده می‌شه
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchDoctors(search);
-    }, 500); // ۵۰۰ میلی‌ثانیه صبر می‌کنه تا کاربر تایپش تموم بشه
+    }, 500);
 
     return () => clearTimeout(delayDebounceFn);
   }, [search]);
@@ -29,7 +35,6 @@ function DoctorsList() {
   const fetchDoctors = async (searchQuery = "") => {
     setLoading(true);
     try {
-      // ارسال مقدار جستجو به بک‌اند
       const response = await api.get(`/accounts/doctors/`, {
         params: { search: searchQuery }
       });
@@ -44,48 +49,161 @@ function DoctorsList() {
     }
   };
 
+  const isMobile = screenWidth <= 768;
+  const isSmallMobile = screenWidth <= 480;
+
   return (
     <div style={styles.pageBackground}>
-      
-      <nav style={styles.navbar}>
-        <div style={styles.logo}>
-          <span style={{ fontSize: "28px", marginLeft: "10px" }}>⛑️</span>
-          کلینیک نوبت‌دهی آنلاین
-        </div>
+      <nav
+        style={{
+          ...styles.navbar,
+          padding: isSmallMobile ? "8px 10px" : isMobile ? "10px 16px" : "15px 60px"
+        }}
+      >
+        {/* DESKTOP */}
+        {!isMobile && (
+          <>
+            <div style={styles.logo}>
+              <span style={{ fontSize: "28px", marginLeft: "10px" }}>⛑️</span>
+              کلینیک نوبت‌دهی آنلاین
+            </div>
 
-        <div style={styles.navLinks}>
-          <span style={styles.link} onClick={() => navigate("/patient-dashboard")}>
-            داشبورد
-          </span>
+            <div style={styles.navLinks}>
+              <span style={styles.link} onClick={() => navigate("/patient-dashboard")}>
+                داشبورد
+              </span>
 
-          <span style={styles.activeLink}>
-            پزشکان
-          </span>
+              <span style={styles.activeLink}>پزشکان</span>
 
-          <span style={styles.link} onClick={() => navigate("/patient-appointments")}>
-            نوبت‌های من
-          </span>
+              <span style={styles.link} onClick={() => navigate("/patient-appointments")}>
+                نوبت‌های من
+              </span>
 
-          <span style={styles.link} onClick={() => navigate("/patient-profile")}>
-            پروفایل
-          </span>
+              <span style={styles.link} onClick={() => navigate("/patient-profile")}>
+                پروفایل
+              </span>
 
-          <button style={styles.logoutBtn} onClick={handleLogout}>
-            خروج
-          </button>
-        </div>
+              <button style={styles.logoutBtn} onClick={handleLogout}>
+                خروج
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* MOBILE / TABLET */}
+        {isMobile && (
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
+            {/* Row 1 */}
+            <div style={styles.navTopRow}>
+              <div
+                style={{
+                  ...styles.logo,
+                  fontSize: isSmallMobile ? "14px" : "16px",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  minWidth: 0
+                }}
+                title="کلینیک نوبت‌دهی آنلاین"
+              >
+                <span style={{ fontSize: isSmallMobile ? "18px" : "22px", marginLeft: "8px" }}>
+                  ⛑️
+                </span>
+                کلینیک نوبت‌دهی آنلاین
+              </div>
+
+              <button
+                style={{
+                  ...styles.logoutBtn,
+                  padding: isSmallMobile ? "6px 10px" : "8px 14px",
+                  fontSize: isSmallMobile ? "12px" : "13px",
+                  borderRadius: isSmallMobile ? "8px" : "12px"
+                }}
+                onClick={handleLogout}
+              >
+                خروج
+              </button>
+            </div>
+
+            {/* Row 2 */}
+            <div
+              style={{
+                ...styles.navLinksRow,
+                gap: isSmallMobile ? "8px" : "12px",
+                paddingTop: "8px",
+                borderTop: "1px solid rgba(0,0,0,0.06)"
+              }}
+            >
+              <span
+                style={{ ...styles.link, fontSize: isSmallMobile ? "12px" : "13px" }}
+                onClick={() => navigate("/patient-dashboard")}
+              >
+                داشبورد
+              </span>
+
+              <span
+                style={{
+                  ...styles.activeLink,
+                  fontSize: isSmallMobile ? "12px" : "13px",
+                  paddingBottom: isSmallMobile ? "2px" : "4px",
+                  borderBottomWidth: isSmallMobile ? "2px" : "3px"
+                }}
+              >
+                پزشکان
+              </span>
+
+              <span
+                style={{ ...styles.link, fontSize: isSmallMobile ? "12px" : "13px" }}
+                onClick={() => navigate("/patient-appointments")}
+              >
+                نوبت‌های من
+              </span>
+
+              <span
+                style={{ ...styles.link, fontSize: isSmallMobile ? "12px" : "13px" }}
+                onClick={() => navigate("/patient-profile")}
+              >
+                پروفایل
+              </span>
+            </div>
+          </div>
+        )}
       </nav>
 
-      <div style={styles.mainContainer}>
+      <div
+        style={{
+          ...styles.mainContainer,
+          margin: isMobile ? "25px auto" : "40px auto",
+          padding: isMobile ? "0 14px" : "0 20px"
+        }}
+      >
+        <h2
+          style={{
+            ...styles.title,
+            fontSize: isSmallMobile ? "22px" : isMobile ? "26px" : "30px",
+            marginBottom: isMobile ? "22px" : "30px"
+          }}
+        >
+          لیست پزشکان
+        </h2>
 
-        <h2 style={styles.title}>لیست پزشکان</h2>
-
-        <div style={styles.searchWrapper}>
+        <div
+          style={{
+            ...styles.searchWrapper,
+            marginBottom: isMobile ? "22px" : "30px"
+          }}
+        >
           <input
             placeholder="جستجوی نام، فامیل یا تخصص پزشک..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={styles.searchInput}
+            style={{
+              ...styles.searchInput,
+              width: isSmallMobile ? "100%" : isMobile ? "100%" : "260px",
+              maxWidth: "100%",
+              fontSize: isSmallMobile ? "13px" : "14px",
+              padding: isSmallMobile ? "10px" : "12px"
+            }}
           />
         </div>
 
@@ -96,7 +214,13 @@ function DoctorsList() {
         ) : doctors.length === 0 ? (
           <p style={{ textAlign: "center" }}>پزشکی یافت نشد</p>
         ) : (
-          <div style={styles.grid3}>
+          <div
+            style={{
+              ...styles.grid3,
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: isMobile ? "18px" : "25px"
+            }}
+          >
             {doctors.map((doctor) => (
               <div key={doctor.id} style={styles.doctorCard}>
                 <div style={styles.avatarWrapper}>
@@ -107,11 +231,16 @@ function DoctorsList() {
                       style={styles.avatarImg}
                     />
                   ) : (
-                    <span style={{ fontSize: "40px" }}>👤</span>
+                    <span style={{ fontSize: isMobile ? "32px" : "40px" }}>👤</span>
                   )}
                 </div>
 
-                <h4 style={styles.doctorName}>
+                <h4
+                  style={{
+                    ...styles.doctorName,
+                    fontSize: isMobile ? "17px" : "18px"
+                  }}
+                >
                   دکتر {doctor.first_name} {doctor.last_name}
                 </h4>
 
@@ -146,7 +275,6 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "15px 60px",
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
     backdropFilter: "blur(10px)",
@@ -169,17 +297,35 @@ const styles = {
     alignItems: "center"
   },
 
+  navTopRow: {
+    display: "flex",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "10px"
+  },
+
+  navLinksRow: {
+    display: "flex",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap"
+  },
+
   link: {
     cursor: "pointer",
     color: "#555",
-    fontWeight: "500"
+    fontWeight: "500",
+    whiteSpace: "nowrap"
   },
 
   activeLink: {
     color: "#00897b",
     fontWeight: "bold",
     borderBottom: "3px solid #00897b",
-    paddingBottom: "5px"
+    paddingBottom: "5px",
+    whiteSpace: "nowrap"
   },
 
   logoutBtn: {
@@ -189,7 +335,9 @@ const styles = {
     padding: "10px 22px",
     borderRadius: "12px",
     fontWeight: "bold",
-    cursor: "pointer"
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    flexShrink: 0
   },
 
   mainContainer: {
@@ -214,7 +362,9 @@ const styles = {
     padding: "12px",
     borderRadius: "12px",
     border: "1px solid #ddd",
-    width: "260px"
+    width: "260px",
+    boxSizing: "border-box",
+    outline: "none"
   },
 
   grid3: {
@@ -245,9 +395,17 @@ const styles = {
     border: "3px solid #e0f2f1"
   },
 
-  avatarImg: { width: "100%", height: "100%", objectFit: "cover" },
+  avatarImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover"
+  },
 
-  doctorName: { color: "#004d40", fontSize: "18px", margin: "10px 0 5px 0" },
+  doctorName: {
+    color: "#004d40",
+    fontSize: "18px",
+    margin: "10px 0 5px 0"
+  },
 
   doctorSpecialty: {
     color: "#00acc1",

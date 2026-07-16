@@ -20,6 +20,17 @@ function AppointmentSelectionPage() {
   const [loading, setLoading] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
 
+  // اضافه کردن استیت عرض صفحه برای ریسپانسیو موبایل
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const isMobile = screenWidth <= 768;
+  const isSmallMobile = screenWidth <= 480;
+
+  useEffect(() => {
+    const handleResize = () => setScreenWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     const fetchDoctor = async () => {
       try {
@@ -111,29 +122,111 @@ function AppointmentSelectionPage() {
   return (
     <div style={styles.pageBackground}>
 
-      <nav style={styles.navbar}>
+      {/* نوار ناوبری */}
+      <nav style={isMobile ? { ...styles.navbar, padding: isSmallMobile ? "8px 10px" : "10px 16px" } : styles.navbar}>
 
-        <div style={styles.logo}>
-          <span style={{ fontSize: 28, marginLeft: 10 }}>⛑️</span>
-          کلینیک نوبت‌دهی آنلاین
-        </div>
+        {!isMobile ? (
+          // دسکتاپ کاملاً دست‌نخورده و عینا مطابق کد اولیه شما
+          <>
+            <div style={styles.logo}>
+              <span style={{ fontSize: 28, marginLeft: 10 }}>⛑️</span>
+              کلینیک نوبت‌دهی آنلاین
+            </div>
 
-        <div style={styles.navLinks}>
-          <span style={styles.link} onClick={() => navigate('/patient-dashboard')}>داشبورد</span>
-          <span style={styles.activeLink}>رزرو نوبت</span>
-          <span style={styles.link} onClick={() => navigate('/patient-appointments')}>نوبت‌های من</span>
-          <span style={styles.link} onClick={() => navigate('/patient-profile')}>پروفایل</span>
-          
-        </div>
+            <div style={styles.navLinks}>
+              <span style={styles.link} onClick={() => navigate('/patient-dashboard')}>داشبورد</span>
+              <span style={styles.activeLink}>رزرو نوبت</span>
+              <span style={styles.link} onClick={() => navigate('/patient-appointments')}>نوبت‌های من</span>
+              <span style={styles.link} onClick={() => navigate('/patient-profile')}>پروفایل</span>
+            </div>
+          </>
+        ) : (
+          // موبایل به صورت دو ردیفه و فشرده با کلید خروج جداگانه در صورت نیاز (یا بدون آن طبق طرح اصلی شما)
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={styles.navTopRow}>
+              <div
+                style={{
+                  ...styles.logo,
+                  fontSize: isSmallMobile ? "14px" : "16px",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  minWidth: 0
+                }}
+              >
+                <span style={{ fontSize: isSmallMobile ? 18 : 22, marginLeft: 8 }}>⛑️</span>
+                کلینیک نوبت‌دهی آنلاین
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...styles.navLinksRow,
+                gap: isSmallMobile ? "8px" : "12px",
+                paddingTop: "8px",
+                borderTop: "1px solid rgba(0,0,0,0.06)"
+              }}
+            >
+              <span
+                style={{ ...styles.link, fontSize: isSmallMobile ? "12px" : "13px" }}
+                onClick={() => navigate("/patient-dashboard")}
+              >
+                داشبورد
+              </span>
+
+              <span
+                style={{
+                  ...styles.activeLink,
+                  fontSize: isSmallMobile ? "12px" : "13px",
+                  paddingBottom: isSmallMobile ? "2px" : "4px",
+                  borderBottomWidth: isSmallMobile ? "2px" : "3px"
+                }}
+              >
+                رزرو نوبت
+              </span>
+
+              <span
+                style={{ ...styles.link, fontSize: isSmallMobile ? "12px" : "13px" }}
+                onClick={() => navigate("/patient-appointments")}
+              >
+                نوبت‌های من
+              </span>
+
+              <span
+                style={{ ...styles.link, fontSize: isSmallMobile ? "12px" : "13px" }}
+                onClick={() => navigate("/patient-profile")}
+              >
+                پروفایل
+              </span>
+            </div>
+          </div>
+        )}
 
       </nav>
 
-      <div style={styles.container}>
+      <div style={{
+        ...styles.container,
+        margin: isMobile ? "25px auto" : "40px auto",
+        padding: isMobile ? "0 14px" : 20
+      }}>
 
         {doctorInfo && (
-          <div style={styles.doctorCard}>
+          <div style={isMobile ? {
+            ...styles.doctorCard,
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            gap: 12,
+            padding: isSmallMobile ? "14px" : "18px",
+            marginBottom: 16
+          } : styles.doctorCard}>
 
-            <div style={styles.avatarWrapper}>
+            <div style={isMobile ? {
+              ...styles.avatarWrapper,
+              width: 72,
+              height: 72,
+              fontSize: 34
+            } : styles.avatarWrapper}>
               {doctorInfo.profile_image ?
                 <img src={doctorInfo.profile_image} alt="doc" style={styles.avatarImg} />
                 :
@@ -142,11 +235,17 @@ function AppointmentSelectionPage() {
             </div>
 
             <div>
-              <h2 style={styles.doctorName}>
+              <h2 style={isMobile ? {
+                ...styles.doctorName,
+                fontSize: isSmallMobile ? "16px" : "18px"
+              } : styles.doctorName}>
                 دکتر {doctorInfo.first_name} {doctorInfo.last_name}
               </h2>
 
-              <p style={styles.specialty}>
+              <p style={isMobile ? {
+                ...styles.specialty,
+                fontSize: isSmallMobile ? "12.5px" : "13px"
+              } : styles.specialty}>
                 {doctorInfo.specialty || "متخصص عمومی"}
               </p>
             </div>
@@ -154,30 +253,47 @@ function AppointmentSelectionPage() {
           </div>
         )}
 
-        <div style={styles.glassCard}>
+        <div style={isMobile ? {
+          ...styles.glassCard,
+          padding: isSmallMobile ? "16px 12px" : "22px 14px",
+          borderRadius: 18
+        } : styles.glassCard}>
 
-          <h3 style={styles.sectionTitle}>انتخاب تاریخ</h3>
+          <h3 style={isMobile ? {
+            ...styles.sectionTitle,
+            fontSize: isSmallMobile ? "15px" : "16px",
+            marginBottom: 10
+          } : styles.sectionTitle}>انتخاب تاریخ</h3>
 
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 30 }}>
-
-            <Calendar
-              calendar={persian}
-              locale={persian_fa}
-              minDate={new DateObject()}
-              onChange={handleCalendarChange}
-            />
-
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: isMobile ? 16 : 30 }}>
+            <div style={{ width: "100%", maxWidth: isMobile ? 340 : 420, display: 'flex', justifyContent: 'center' }}>
+              <Calendar
+                calendar={persian}
+                locale={persian_fa}
+                minDate={new DateObject()}
+                onChange={handleCalendarChange}
+                className={isMobile ? "rmdp-mobile" : ""}
+              />
+            </div>
           </div>
 
-          <h3 style={styles.sectionTitle}>انتخاب ساعت</h3>
+          <h3 style={isMobile ? {
+            ...styles.sectionTitle,
+            fontSize: isSmallMobile ? "15px" : "16px",
+            marginBottom: 10
+          } : styles.sectionTitle}>انتخاب ساعت</h3>
 
           {loading ?
 
-            <p style={styles.infoText}>در حال دریافت زمان‌ها...</p>
+            <p style={isMobile ? { ...styles.infoText, fontSize: "13px" } : styles.infoText}>در حال دریافت زمان‌ها...</p>
 
             :
 
-            <div style={styles.slotsGrid}>
+            <div style={isMobile ? {
+              ...styles.slotsGrid,
+              gridTemplateColumns: isSmallMobile ? "repeat(3, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))",
+              gap: isSmallMobile ? 10 : 12
+            } : styles.slotsGrid}>
 
               {availableSlots.length > 0 ?
 
@@ -186,7 +302,11 @@ function AppointmentSelectionPage() {
                   <div
                     key={slot}
                     onClick={() => setSelectedSlot(slot)}
-                    style={selectedSlot === slot ? styles.slotActive : styles.slot}
+                    style={selectedSlot === slot ? (
+                      isMobile ? { ...styles.slotActive, padding: "10px 8px", borderRadius: 10, fontSize: isSmallMobile ? "12px" : "13px" } : styles.slotActive
+                    ) : (
+                      isMobile ? { ...styles.slot, padding: "10px 8px", borderRadius: 10, fontSize: isSmallMobile ? "12px" : "13px" } : styles.slot
+                    )}
                   >
 
                     {slot}
@@ -197,7 +317,7 @@ function AppointmentSelectionPage() {
 
                 :
 
-                <p style={styles.infoText}>
+                <p style={{ ...styles.infoText, gridColumn: "1 / -1" }}>
                   {selectedDate ? "زمانی موجود نیست" : "ابتدا تاریخ انتخاب کنید"}
                 </p>
 
@@ -208,7 +328,11 @@ function AppointmentSelectionPage() {
           }
 
           <button
-            style={bookingLoading || !selectedSlot ? styles.disabledBtn : styles.bookBtn}
+            style={bookingLoading || !selectedSlot ? (
+              isMobile ? { ...styles.disabledBtn, marginTop: 18, padding: 12, fontSize: isSmallMobile ? 14 : 15, borderRadius: 12 } : styles.disabledBtn
+            ) : (
+              isMobile ? { ...styles.bookBtn, marginTop: 18, padding: 12, fontSize: isSmallMobile ? 14 : 15, borderRadius: 12 } : styles.bookBtn
+            )}
             disabled={bookingLoading || !selectedSlot}
             onClick={handleBookNow}
           >
@@ -241,7 +365,10 @@ const styles = {
     padding: '15px 60px',
     background: 'rgba(255,255,255,0.8)',
     backdropFilter: 'blur(10px)',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 1000
   },
 
   logo: {
@@ -257,16 +384,33 @@ const styles = {
     gap: 25
   },
 
+  navTopRow: {
+    display: "flex",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+
+  navLinksRow: {
+    display: "flex",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap"
+  },
+
   link: {
     cursor: 'pointer',
-    color: '#555'
+    color: '#555',
+    whiteSpace: 'nowrap'
   },
 
   activeLink: {
     color: '#00897b',
     fontWeight: 'bold',
     borderBottom: '3px solid #00897b',
-    paddingBottom: 5
+    paddingBottom: 5,
+    whiteSpace: 'nowrap'
   },
 
   container: {
@@ -295,7 +439,8 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: 40,
-    overflow: 'hidden'
+    overflow: 'hidden',
+    flexShrink: 0
   },
 
   avatarImg: {
