@@ -18,12 +18,21 @@ function DoctorProfile() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const isMobile = screenWidth <= 768;
+  const isSmallMobile = screenWidth <= 480;
+
+  useEffect(() => {
+    const handleResize = () => setScreenWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     navigate("/");
   };
-  
 
   useEffect(() => {
     api.get('accounts/doctor/me/')
@@ -77,56 +86,180 @@ function DoctorProfile() {
 
   return (
     <div style={styles.pageBackground}>
+      <nav
+        style={
+          isMobile
+            ? {
+                ...styles.navbar,
+                padding: isSmallMobile ? '8px 10px' : '10px 16px',
+              }
+            : styles.navbar
+        }
+      >
+        {!isMobile ? (
+          <>
+            <div style={styles.logo}>
+              <span style={{ fontSize: '26px', marginLeft: '10px' }}>⛑️</span>
+              کلینیک نوبت‌دهی آنلاین
+            </div>
 
-      <nav style={styles.navbar}>
-        <div style={styles.logo}>
-          <span style={{ fontSize: '26px', marginLeft: '10px' }}>⛑️</span>
-          کلینیک نوبت‌دهی آنلاین
-        </div>
+            <div style={styles.navLinks}>
+              <span style={styles.link} onClick={() => navigate('/doctor-dashboard')}>
+                داشبورد
+              </span>
+              <span style={styles.link} onClick={() => navigate('/doctor-appointments')}>
+                نوبت‌ها
+              </span>
+              <span style={styles.activeLink}>پروفایل</span>
 
-        <div style={styles.navLinks}>
-          <span style={styles.link} onClick={() => navigate('/doctor-dashboard')}>
-            داشبورد
-          </span>
-          <span style={styles.link} onClick={() => navigate('/doctor-appointments')}>
-            نوبت‌ها
-          </span>
-          <span style={styles.activeLink}>
-            پروفایل
-          </span>
+              <button style={styles.logoutBtn} onClick={handleLogout}>
+                خروج
+              </button>
+            </div>
+          </>
+        ) : (
+          <div style={styles.mobileNavWrapper}>
+            <div style={styles.navTopRow}>
+              <div
+                style={{
+                  ...styles.logo,
+                  fontSize: isSmallMobile ? '14px' : '16px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  minWidth: 0,
+                }}
+                title="کلینیک نوبت‌دهی آنلاین"
+              >
+                <span style={{ fontSize: isSmallMobile ? 18 : 22, marginLeft: 8 }}>⛑️</span>
+                کلینیک نوبت‌دهی آنلاین
+              </div>
 
-          <button style={styles.logoutBtn} onClick={handleLogout}>
-            خروج
-          </button>
-        </div>
+              <button
+                style={{
+                  ...styles.logoutBtn,
+                  padding: isSmallMobile ? '6px 10px' : '8px 14px',
+                  fontSize: isSmallMobile ? '12px' : '13px',
+                  borderRadius: isSmallMobile ? '8px' : '12px',
+                  flexShrink: 0,
+                }}
+                onClick={handleLogout}
+              >
+                خروج
+              </button>
+            </div>
+
+            <div
+              style={{
+                ...styles.navLinksRow,
+                gap: isSmallMobile ? '8px' : '12px',
+                paddingTop: '8px',
+                borderTop: '1px solid rgba(0,0,0,0.06)',
+              }}
+            >
+              <span
+                style={{ ...styles.link, fontSize: isSmallMobile ? '12px' : '13px' }}
+                onClick={() => navigate('/doctor-dashboard')}
+              >
+                داشبورد
+              </span>
+              <span
+                style={{ ...styles.link, fontSize: isSmallMobile ? '12px' : '13px' }}
+                onClick={() => navigate('/doctor-appointments')}
+              >
+                نوبت‌ها
+              </span>
+              <span style={{ ...styles.activeLink, fontSize: isSmallMobile ? '12px' : '13px' }}>
+                پروفایل
+              </span>
+            </div>
+          </div>
+        )}
       </nav>
 
-      <div style={styles.container}>
-        <div style={styles.headerCard}>
-          <h2 style={styles.title}>ویرایش پروفایل پزشک</h2>
-          <p style={styles.subtitle}>اطلاعات تخصص و رزومه خود را به‌روزرسانی کنید</p>
+      <div
+        style={{
+          ...styles.container,
+          margin: isMobile ? '24px auto' : '40px auto',
+          padding: isMobile ? '0 14px' : '0 20px',
+        }}
+      >
+        <div
+          style={{
+            ...styles.headerCard,
+            marginBottom: isMobile ? '24px' : '40px',
+          }}
+        >
+          <h2
+            style={{
+              ...styles.title,
+              fontSize: isSmallMobile ? '22px' : isMobile ? '24px' : '28px',
+              lineHeight: isMobile ? '1.8' : 'normal',
+            }}
+          >
+            ویرایش پروفایل پزشک
+          </h2>
+          <p
+            style={{
+              ...styles.subtitle,
+              fontSize: isMobile ? '13px' : '15px',
+            }}
+          >
+            اطلاعات تخصص و رزومه خود را به‌روزرسانی کنید
+          </p>
         </div>
 
         {loading ? (
           <div style={styles.loader}>در حال بارگذاری... ⏳</div>
         ) : (
-          <div style={styles.card}>
+          <div
+            style={{
+              ...styles.card,
+              padding: isSmallMobile ? '18px 14px' : isMobile ? '22px 16px' : '40px',
+              borderRadius: isMobile ? '18px' : '25px',
+            }}
+          >
             {message.text && (
               <div
                 style={{
                   ...styles.alert,
                   backgroundColor: message.type === 'success' ? '#e8f5e9' : '#ffebee',
                   color: message.type === 'success' ? '#2e7d32' : '#c62828',
+                  padding: isMobile ? '12px' : '15px',
+                  borderRadius: isMobile ? '10px' : '12px',
+                  marginBottom: isMobile ? '16px' : '20px',
                 }}
               >
                 {message.text}
               </div>
             )}
 
-            <form onSubmit={handleSave} style={styles.formGrid}>
-
-              <div style={styles.sideCol}>
-                <div style={styles.avatarWrapper}>
+            <form
+              onSubmit={handleSave}
+              style={{
+                ...styles.formGrid,
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr',
+                gap: isMobile ? '24px' : '40px',
+              }}
+            >
+              <div
+                style={{
+                  ...styles.sideCol,
+                  borderLeft: isMobile ? 'none' : '1px solid rgba(0,0,0,0.08)',
+                  paddingLeft: isMobile ? '0' : '30px',
+                  paddingBottom: isMobile ? '20px' : '0',
+                  borderBottom: isMobile ? '1px solid rgba(0,0,0,0.08)' : 'none',
+                  textAlign: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    ...styles.avatarWrapper,
+                    width: isSmallMobile ? '110px' : isMobile ? '120px' : '140px',
+                    height: isSmallMobile ? '110px' : isMobile ? '120px' : '140px',
+                    marginBottom: isMobile ? '16px' : '20px',
+                  }}
+                >
                   {profileImage ? (
                     <img src={profileImage} alt="پروفایل" style={styles.avatarImg} />
                   ) : (
@@ -134,15 +267,32 @@ function DoctorProfile() {
                   )}
                 </div>
 
-                <h3 style={styles.doctorName}>
+                <h3
+                  style={{
+                    ...styles.doctorName,
+                    fontSize: isMobile ? '18px' : '20px',
+                    marginBottom: '5px',
+                  }}
+                >
                   دکتر {formData.first_name} {formData.last_name}
                 </h3>
 
-                <p style={styles.specialtyLabel}>
+                <p
+                  style={{
+                    ...styles.specialtyLabel,
+                    fontSize: isMobile ? '14px' : '15px',
+                    marginBottom: isMobile ? '16px' : '20px',
+                  }}
+                >
                   {formData.specialty || 'متخصص'}
                 </p>
 
-                <div style={styles.licenseBadge}>
+                <div
+                  style={{
+                    ...styles.licenseBadge,
+                    padding: isMobile ? '10px' : '10px',
+                  }}
+                >
                   <small>شماره نظام پزشکی</small>
                   <div style={styles.licenseValue}>
                     {formData.medical_license_number}
@@ -158,7 +308,12 @@ function DoctorProfile() {
                     name="first_name"
                     value={formData.first_name}
                     onChange={handleChange}
-                    style={styles.inputField}
+                    style={{
+                      ...styles.inputField,
+                      padding: isMobile ? '11px' : '12px',
+                      fontSize: isMobile ? '13px' : '14px',
+                      borderRadius: isMobile ? '10px' : '12px',
+                    }}
                     required
                   />
                 </div>
@@ -170,7 +325,12 @@ function DoctorProfile() {
                     name="last_name"
                     value={formData.last_name}
                     onChange={handleChange}
-                    style={styles.inputField}
+                    style={{
+                      ...styles.inputField,
+                      padding: isMobile ? '11px' : '12px',
+                      fontSize: isMobile ? '13px' : '14px',
+                      borderRadius: isMobile ? '10px' : '12px',
+                    }}
                     required
                   />
                 </div>
@@ -182,7 +342,12 @@ function DoctorProfile() {
                     name="specialty"
                     value={formData.specialty}
                     onChange={handleChange}
-                    style={styles.inputField}
+                    style={{
+                      ...styles.inputField,
+                      padding: isMobile ? '11px' : '12px',
+                      fontSize: isMobile ? '13px' : '14px',
+                      borderRadius: isMobile ? '10px' : '12px',
+                    }}
                   />
                 </div>
 
@@ -192,25 +357,51 @@ function DoctorProfile() {
                     name="bio"
                     value={formData.bio}
                     onChange={handleChange}
-                    style={{ ...styles.inputField, minHeight: '120px', resize: 'vertical' }}
+                    style={{
+                      ...styles.inputField,
+                      minHeight: isMobile ? '110px' : '120px',
+                      resize: 'vertical',
+                      padding: isMobile ? '11px' : '12px',
+                      fontSize: isMobile ? '13px' : '14px',
+                      borderRadius: isMobile ? '10px' : '12px',
+                    }}
                   />
                 </div>
 
-                <div style={styles.btnGroup}>
-                  <button type="submit" disabled={saving} style={styles.saveBtn}>
+                <div
+                  style={{
+                    ...styles.btnGroup,
+                    flexDirection: isSmallMobile ? 'column' : 'row',
+                    gap: isMobile ? '10px' : '15px',
+                  }}
+                >
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    style={{
+                      ...styles.saveBtn,
+                      width: isSmallMobile ? '100%' : 'auto',
+                      padding: isMobile ? '12px' : '12px',
+                      fontSize: isMobile ? '14px' : '15px',
+                    }}
+                  >
                     {saving ? 'در حال ذخیره‌سازی...' : '💾 ذخیره تغییرات'}
                   </button>
 
                   <button
                     type="button"
                     onClick={() => navigate('/doctor-dashboard')}
-                    style={styles.cancelBtn}
+                    style={{
+                      ...styles.cancelBtn,
+                      width: isSmallMobile ? '100%' : '100px',
+                      padding: isMobile ? '12px' : '12px',
+                      fontSize: isMobile ? '14px' : '15px',
+                    }}
                   >
                     انصراف
                   </button>
                 </div>
               </div>
-
             </form>
           </div>
         )}
@@ -220,11 +411,11 @@ function DoctorProfile() {
 }
 
 const styles = {
-
   pageBackground: {
     minHeight: '100vh',
     background: 'radial-gradient(circle, #f0f9ff 0%, #cbebff 100%)',
     direction: 'rtl',
+    fontFamily: 'Tahoma, Arial',
   },
 
   navbar: {
@@ -240,12 +431,36 @@ const styles = {
     zIndex: 1000,
   },
 
+  mobileNavWrapper: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+
+  navTopRow: {
+    display: 'flex',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '10px',
+  },
+
+  navLinksRow: {
+    display: 'flex',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+  },
+
   logo: {
     fontWeight: 'bold',
     fontSize: '22px',
     color: '#007080',
     display: 'flex',
     alignItems: 'center',
+    minWidth: 0,
   },
 
   navLinks: {
@@ -258,6 +473,7 @@ const styles = {
     cursor: 'pointer',
     color: '#555',
     fontWeight: '500',
+    whiteSpace: 'nowrap',
   },
 
   activeLink: {
@@ -266,6 +482,7 @@ const styles = {
     borderBottom: '2px solid #00897b',
     paddingBottom: '5px',
     cursor: 'default',
+    whiteSpace: 'nowrap',
   },
 
   logoutBtn: {
@@ -393,6 +610,7 @@ const styles = {
     border: '1px solid #b2dfdb',
     borderRadius: '12px',
     textAlign: 'right',
+    boxSizing: 'border-box',
   },
 
   btnGroup: {
